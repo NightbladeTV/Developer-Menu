@@ -1,0 +1,278 @@
+-- Custom Developer GUI (Player + Misc Tabs)
+-- WalkSpeed, JumpPower, Anti-AFK, Close + Drag
+-- Safe for your own games
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
+
+local function new(class, props)
+	local obj = Instance.new(class)
+	for k, v in pairs(props or {}) do obj[k] = v end
+	return obj
+end
+
+-- Root GUI
+local screenGui = new("ScreenGui", {
+	Name = "DevUtilityGUI",
+	Parent = playerGui,
+	ResetOnSpawn = false,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+})
+
+-- Main Frame
+local main = new("Frame", {
+	Parent = screenGui,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	Size = UDim2.new(0, 520, 0, 360),
+	BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+	BorderSizePixel = 0,
+	Active = true,
+	Draggable = true -- makes it movable
+})
+new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = main })
+
+-- Title Bar
+local titleBar = new("Frame", {
+	Parent = main,
+	Size = UDim2.new(1, 0, 0, 52),
+	BackgroundTransparency = 1
+})
+
+new("TextLabel", {
+	Parent = titleBar,
+	Text = "Developer Menu",
+	Position = UDim2.new(0, 12, 0, 8),
+	Size = UDim2.new(0.5, -24, 1, -16),
+	TextColor3 = Color3.fromRGB(230,230,230),
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	TextSize = 20,
+	TextXAlignment = Enum.TextXAlignment.Left
+})
+
+-- Close Button
+local closeBtn = new("TextButton", {
+	Parent = titleBar,
+	Text = "X",
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -10, 0, 8),
+	Size = UDim2.new(0, 36, 0, 36),
+	BackgroundColor3 = Color3.fromRGB(50, 30, 30),
+	TextColor3 = Color3.fromRGB(255, 150, 150),
+	Font = Enum.Font.GothamBold,
+	TextSize = 18,
+	BorderSizePixel = 0
+})
+new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = closeBtn })
+
+-- Tabs
+local tabsFrame = new("Frame", {
+	Parent = titleBar,
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -60, 0, 8),
+	Size = UDim2.new(0, 220, 1, -16),
+	BackgroundTransparency = 1
+})
+
+local function makeTab(text, active)
+	local btn = new("TextButton", {
+		Name = text .. "Tab",
+		Parent = tabsFrame,
+		Size = UDim2.new(0.5, -6, 1, 0),
+		BackgroundColor3 = active and Color3.fromRGB(50,50,50) or Color3.fromRGB(40,40,40),
+		Text = text,
+		TextColor3 = Color3.fromRGB(230,230,230),
+		Font = Enum.Font.GothamSemibold,
+		TextSize = 14,
+		BorderSizePixel = 0
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
+	return btn
+end
+
+local playerTab = makeTab("Player", true)
+local miscTab = makeTab("Misc", false)
+playerTab.Position = UDim2.new(0, 0, 0, 0)
+miscTab.Position = UDim2.new(0.5, 6, 0, 0)
+
+-- Divider
+new("Frame", {
+	Parent = main,
+	Size = UDim2.new(1, -24, 0, 1),
+	Position = UDim2.new(0, 12, 0, 56),
+	BackgroundColor3 = Color3.fromRGB(70,70,70)
+})
+
+-- Content Frame
+local content = new("Frame", {
+	Parent = main,
+	Position = UDim2.new(0, 12, 0, 68),
+	Size = UDim2.new(1, -24, 1, -80),
+	BackgroundTransparency = 1
+})
+
+local playerContent = new("Frame", {
+	Parent = content,
+	Size = UDim2.new(1, 0, 1, 0),
+	BackgroundTransparency = 1
+})
+
+local miscContent = new("Frame", {
+	Parent = content,
+	Size = UDim2.new(1, 0, 1, 0),
+	Visible = false,
+	BackgroundTransparency = 1
+})
+
+-- PLAYER TAB CONTENT
+local speedLabel = new("TextLabel", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 12, 0, 12),
+	Size = UDim2.new(0, 120, 0, 36),
+	Text = "WalkSpeed:",
+	TextColor3 = Color3.fromRGB(240,240,240),
+	BackgroundTransparency = 1,
+	Font = Enum.Font.Gotham,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left
+})
+
+local speedBox = new("TextBox", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 130, 0, 12),
+	Size = UDim2.new(0, 100, 0, 36),
+	BackgroundColor3 = Color3.fromRGB(40,40,40),
+	PlaceholderText = "e.g. 30",
+	TextColor3 = Color3.fromRGB(230,230,230),
+	Font = Enum.Font.Gotham,
+	TextSize = 14,
+	BorderSizePixel = 0
+})
+new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = speedBox })
+
+local setSpeed = new("TextButton", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 240, 0, 12),
+	Size = UDim2.new(0, 80, 0, 36),
+	Text = "Set",
+	BackgroundColor3 = Color3.fromRGB(50,50,50),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamSemibold,
+	TextSize = 16,
+	BorderSizePixel = 0
+})
+new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = setSpeed })
+
+local jumpLabel = new("TextLabel", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 12, 0, 60),
+	Size = UDim2.new(0, 120, 0, 36),
+	Text = "JumpPower:",
+	TextColor3 = Color3.fromRGB(240,240,240),
+	BackgroundTransparency = 1,
+	Font = Enum.Font.Gotham,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left
+})
+
+local jumpBox = new("TextBox", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 130, 0, 60),
+	Size = UDim2.new(0, 100, 0, 36),
+	BackgroundColor3 = Color3.fromRGB(40,40,40),
+	PlaceholderText = "e.g. 60",
+	TextColor3 = Color3.fromRGB(230,230,230),
+	Font = Enum.Font.Gotham,
+	TextSize = 14,
+	BorderSizePixel = 0
+})
+new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = jumpBox })
+
+local setJump = new("TextButton", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 240, 0, 60),
+	Size = UDim2.new(0, 80, 0, 36),
+	Text = "Set",
+	BackgroundColor3 = Color3.fromRGB(50,50,50),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamSemibold,
+	TextSize = 16,
+	BorderSizePixel = 0
+})
+new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = setJump })
+
+local antiAFK = false
+local antiBtn = new("TextButton", {
+	Parent = playerContent,
+	Position = UDim2.new(0, 12, 0, 108),
+	Size = UDim2.new(0, 180, 0, 36),
+	Text = "Anti-AFK: OFF",
+	BackgroundColor3 = Color3.fromRGB(50,50,50),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamSemibold,
+	TextSize = 16,
+	BorderSizePixel = 0
+})
+new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = antiBtn })
+
+-- Logic
+local function switchTab(selected)
+	if selected == "Player" then
+		playerContent.Visible = true
+		miscContent.Visible = false
+		playerTab.BackgroundColor3 = Color3.fromRGB(50,50,50)
+		miscTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	else
+		playerContent.Visible = false
+		miscContent.Visible = true
+		playerTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		miscTab.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	end
+end
+
+playerTab.MouseButton1Click:Connect(function() switchTab("Player") end)
+miscTab.MouseButton1Click:Connect(function() switchTab("Misc") end)
+
+setSpeed.MouseButton1Click:Connect(function()
+	local char = player.Character or player.CharacterAdded:Wait()
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		local speed = tonumber(speedBox.Text)
+		if speed then humanoid.WalkSpeed = speed end
+	end
+end)
+
+setJump.MouseButton1Click:Connect(function()
+	local char = player.Character or player.CharacterAdded:Wait()
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		local jump = tonumber(jumpBox.Text)
+		if jump then humanoid.JumpPower = jump end
+	end
+end)
+
+antiBtn.MouseButton1Click:Connect(function()
+	antiAFK = not antiAFK
+	antiBtn.Text = antiAFK and "Anti-AFK: ON" or "Anti-AFK: OFF"
+	antiBtn.BackgroundColor3 = antiAFK and Color3.fromRGB(60,120,60) or Color3.fromRGB(50,50,50)
+end)
+
+task.spawn(function()
+	while task.wait(30) do
+		if antiAFK then
+			local vu = game:GetService("VirtualUser")
+			vu:CaptureController()
+			vu:ClickButton2(Vector2.new())
+		end
+	end
+end)
+
+-- Close/Open toggle
+local guiVisible = true
+closeBtn.MouseButton1Click:Connect(function()
+	guiVisible = not guiVisible
+	main.Visible = guiVisible
+end)
