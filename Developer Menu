@@ -1,122 +1,343 @@
--- Custom Developer GUI (Player + Misc Tabs)
--- WalkSpeed, JumpPower, Anti-AFK, Close + Drag
--- Safe for your own games
+--== DEVELOPER MENU GUI ==--
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local UserInputService = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 
 local function new(class, props)
-	local obj = Instance.new(class)
-	for k, v in pairs(props or {}) do obj[k] = v end
-	return obj
+	local o = Instance.new(class)
+	for i,v in pairs(props or {}) do o[i] = v end
+	return o
 end
 
--- Root GUI
+-----------------------------------------------------
+-- OPEN / CLOSE BUTTON (mit Drag)
+-----------------------------------------------------
+
+local openBtn = new("TextButton", {
+	Parent = PlayerGui:WaitForChild("PlayerGui"),
+	Text = "DEV MENU",
+	Size = UDim2.new(0,120,0,40),
+	Position = UDim2.new(0.02,0,0.4,0),
+	BackgroundColor3 = Color3.fromRGB(40,40,40),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	BorderSizePixel = 0,
+	Name = "OpenDevBTN"
+})
+new("UICorner",{Parent=openBtn,CornerRadius=UDim.new(0,8)})
+
+local dragging = false
+local dragStart, startPos
+
+openBtn.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = i.Position
+		startPos = openBtn.Position
+	end
+end)
+
+openBtn.InputEnded:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UIS.InputChanged:Connect(function(i)
+	if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = i.Position - dragStart
+		openBtn.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-----------------------------------------------------
+-- MAIN GUI
+-----------------------------------------------------
+
 local screenGui = new("ScreenGui", {
-	Name = "DevUtilityGUI",
-	Parent = playerGui,
+	Parent = PlayerGui,
 	ResetOnSpawn = false,
-	ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	Name = "DevMenu"
 })
 
--- Main Frame
 local main = new("Frame", {
 	Parent = screenGui,
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.new(0.5, 0, 0.5, 0),
-	Size = UDim2.new(0, 520, 0, 360),
-	BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+	Size = UDim2.new(0,360,0,380),
+	Position = UDim2.new(0.35,0,0.25,0),
+	BackgroundColor3 = Color3.fromRGB(30,30,30),
 	BorderSizePixel = 0,
-	Active = true,
-	Draggable = true -- makes it movable
+	Visible = false
 })
-new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = main })
+new("UICorner",{Parent=main,CornerRadius=UDim.new(0,10)})
 
--- Title Bar
-local titleBar = new("Frame", {
+-----------------------------------------------------
+-- DRAGGABLE MAIN GUI
+-----------------------------------------------------
+
+local drag = false
+local dragStart2, startPos2
+
+main.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		drag = true
+		dragStart2 = i.Position
+		startPos2 = main.Position
+	end
+end)
+
+main.InputEnded:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		drag = false
+	end
+end)
+
+UIS.InputChanged:Connect(function(i)
+	if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = i.Position - dragStart2
+		main.Position = UDim2.new(
+			startPos2.X.Scale, startPos2.X.Offset + delta.X,
+			startPos2.Y.Scale, startPos2.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-----------------------------------------------------
+-- TITLEBAR
+-----------------------------------------------------
+
+local title = new("Frame", {
 	Parent = main,
-	Size = UDim2.new(1, 0, 0, 52),
-	BackgroundTransparency = 1
-})
-
-new("TextLabel", {
-	Parent = titleBar,
-	Text = "Developer Menu",
-	Position = UDim2.new(0, 12, 0, 8),
-	Size = UDim2.new(0.5, -24, 1, -16),
-	TextColor3 = Color3.fromRGB(230,230,230),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 20,
-	TextXAlignment = Enum.TextXAlignment.Left
-})
-
--- Close Button
-local closeBtn = new("TextButton", {
-	Parent = titleBar,
-	Text = "X",
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -10, 0, 8),
-	Size = UDim2.new(0, 36, 0, 36),
-	BackgroundColor3 = Color3.fromRGB(50, 30, 30),
-	TextColor3 = Color3.fromRGB(255, 150, 150),
-	Font = Enum.Font.GothamBold,
-	TextSize = 18,
+	Size = UDim2.new(1,0,0,50),
+	BackgroundColor3 = Color3.fromRGB(40,40,40),
 	BorderSizePixel = 0
 })
-new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = closeBtn })
+new("UICorner",{Parent=title,CornerRadius=UDim.new(0,10)})
 
--- Tabs
-local tabsFrame = new("Frame", {
-	Parent = titleBar,
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -60, 0, 8),
-	Size = UDim2.new(0, 220, 1, -16),
-	BackgroundTransparency = 1
+local titleText = new("TextLabel", {
+	Parent = title,
+	Text = "Developer Menu",
+	Position = UDim2.new(0,12,0,0),
+	Size = UDim2.new(0.7,0,1,0),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamBold,
+	TextSize = 20
 })
 
-local function makeTab(text, active)
-	local btn = new("TextButton", {
-		Name = text .. "Tab",
-		Parent = tabsFrame,
-		Size = UDim2.new(0.5, -6, 1, 0),
-		BackgroundColor3 = active and Color3.fromRGB(50,50,50) or Color3.fromRGB(40,40,40),
-		Text = text,
-		TextColor3 = Color3.fromRGB(230,230,230),
-		Font = Enum.Font.GothamSemibold,
-		TextSize = 14,
-		BorderSizePixel = 0
-	})
-	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
-	return btn
+local closeBtn = new("TextButton", {
+	Parent = title,
+	Text = "X",
+	Size = UDim2.new(0,40,0,40),
+	Position = UDim2.new(1,-50,0,5),
+	BackgroundColor3 = Color3.fromRGB(60,40,40),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamBold,
+	TextSize = 20,
+	BorderSizePixel = 0
+})
+new("UICorner",{Parent=closeBtn,CornerRadius=UDim.new(0,8)})
+
+closeBtn.MouseButton1Click:Connect(function()
+	main.Visible = false
+end)
+
+openBtn.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+end)
+
+-----------------------------------------------------
+-- TABS
+-----------------------------------------------------
+
+local playerTab = new("TextButton",{
+	Parent = main,
+	Size = UDim2.new(0.5,0,0,40),
+	Position = UDim2.new(0,0,0,50),
+	Text = "Player",
+	BackgroundColor3 = Color3.fromRGB(60,60,60),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	BorderSizePixel = 0
+})
+local miscTab = new("TextButton",{
+	Parent = main,
+	Size = UDim2.new(0.5,0,0,40),
+	Position = UDim2.new(0.5,0,0,50),
+	Text = "Misc",
+	BackgroundColor3 = Color3.fromRGB(40,40,40),
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	BorderSizePixel = 0
+})
+
+local pages = new("Frame",{Parent=main,Position=UDim2.new(0,0,0,100),Size=UDim2.new(1,0,1,-100),BackgroundTransparency=1})
+
+local playerPage = new("Frame",{Parent=pages,Size=UDim2.new(1,0,1,0),BackgroundTransparency=1})
+local miscPage = new("Frame",{Parent=pages,Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Visible=false})
+
+local function switch(tab)
+	if tab=="player" then
+		playerPage.Visible=true
+		miscPage.Visible=false
+		playerTab.BackgroundColor3=Color3.fromRGB(60,60,60)
+		miscTab.BackgroundColor3=Color3.fromRGB(40,40,40)
+	else
+		playerPage.Visible=false
+		miscPage.Visible=true
+		playerTab.BackgroundColor3=Color3.fromRGB(40,40,40)
+		miscTab.BackgroundColor3=Color3.fromRGB(60,60,60)
+	end
 end
 
-local playerTab = makeTab("Player", true)
-local miscTab = makeTab("Misc", false)
-playerTab.Position = UDim2.new(0, 0, 0, 0)
-miscTab.Position = UDim2.new(0.5, 6, 0, 0)
+playerTab.MouseButton1Click:Connect(function() switch("player") end)
+miscTab.MouseButton1Click:Connect(function() switch("misc") end)
 
--- Divider
-new("Frame", {
-	Parent = main,
-	Size = UDim2.new(1, -24, 0, 1),
-	Position = UDim2.new(0, 12, 0, 56),
-	BackgroundColor3 = Color3.fromRGB(70,70,70)
+-----------------------------------------------------
+-- PLAYER PAGE
+-----------------------------------------------------
+
+local speedBox = new("TextBox",{
+	Parent=playerPage,
+	PlaceholderText="WalkSpeed",
+	Position=UDim2.new(0,20,0,10),
+	Size=UDim2.new(0,140,0,35),
+	BackgroundColor3=Color3.fromRGB(45,45,45),
+	TextColor3=Color3.fromRGB(255,255,255),
+	Font=Enum.Font.Gotham,
+	TextSize=14
+})
+local speedBtn = new("TextButton",{
+	Parent=playerPage,
+	Text="Set",
+	Position=UDim2.new(0,170,0,10),
+	Size=UDim2.new(0,80,0,35),
+	BackgroundColor3=Color3.fromRGB(60,60,60),
+	TextColor3=Color3.fromRGB(255,255,255),
+	Font=Enum.Font.GothamBold,
+	TextSize=16
 })
 
--- Content Frame
-local content = new("Frame", {
-	Parent = main,
-	Position = UDim2.new(0, 12, 0, 68),
-	Size = UDim2.new(1, -24, 1, -80),
-	BackgroundTransparency = 1
+speedBtn.MouseButton1Click:Connect(function()
+	if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+		Player.Character.Humanoid.WalkSpeed = tonumber(speedBox.Text) or 16
+	end
+end)
+
+local jumpBox = new("TextBox",{
+	Parent=playerPage,
+	PlaceholderText="JumpPower",
+	Position=UDim2.new(0,20,0,60),
+	Size=UDim2.new(0,140,0,35),
+	BackgroundColor3=Color3.fromRGB(45,45,45),
+	TextColor3=Color3.fromRGB(255,255,255),
+	Font=Enum.Font.Gotham,
+	TextSize=14
+})
+local jumpBtn = new("TextButton",{
+	Parent=playerPage,
+	Text="Set",
+	Position=UDim2.new(0,170,0,60),
+	Size=UDim2.new(0,80,0,35),
+	BackgroundColor3=Color3.fromRGB(60,60,60),
+	TextColor3=Color3.fromRGB(255,255,255),
+	Font=Enum.Font.GothamBold,
+	TextSize=16
 })
 
-local playerContent = new("Frame", {
-	Parent = content,
-	Size = UDim2.new(1, 0, 1, 0),
-	BackgroundTransparency = 1
+jumpBtn.MouseButton1Click:Connect(function()
+	if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+		Player.Character.Humanoid.JumpPower = tonumber(jumpBox.Text) or 50
+	end
+end)
+
+-- GODMODE
+local god = false
+local godBtn = new("TextButton",{
+	Parent=playerPage,
+	Text="GodMode: OFF",
+	Position=UDim2.new(0,20,0,110),
+	Size=UDim2.new(0,230,0,40),
+	BackgroundColor3=Color3.fromRGB(60,60,60),
+	TextColor3=Color3.fromRGB(255,255,255),
+	Font=Enum.Font.GothamBold,
+	TextSize=16
 })
 
+godBtn.MouseButton1Click:Connect(function()
+	god = not god
+	godBtn.Text = god and "GodMode: ON" or "GodMode: OFF"
+end)
+
+RunService.RenderStepped:Connect(function()
+	if god and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+		Player.Character.Humanoid.Health = 999999
+		Player.Character.Humanoid.MaxHealth = 999999
+	end
+end)
+
+-----------------------------------------------------
+-- MISC PAGE (ESP)
+-----------------------------------------------------
+
+local espEnabled = false
+local espBtn = new("TextButton",{
+	Parent=miscPage,
+	Text="ESP: OFF",
+	Position=UDim2.new(0,20,0,10),
+	Size=UDim2.new(0,230,0,40),
+	BackgroundColor3=Color3.fromRGB(60,60,60),
+	TextColor3=Color3.fromRGB(255,255,255),
+	Font=Enum.Font.GothamBold,
+	TextSize=16
+})
+
+local espBoxes = {}
+
+espBtn.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	espBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+end)
+
+RunService.RenderStepped:Connect(function()
+	for _,plr in pairs(Players:GetPlayers()) do
+		if plr ~= Player then
+			local char = plr.Character
+			if espEnabled and char and char:FindFirstChild("HumanoidRootPart") then
+
+				if not espBoxes[plr] then
+					local box = Instance.new("BoxHandleAdornment")
+					box.Adornee = char.HumanoidRootPart
+					box.Size = Vector3.new(4,7,2)
+					box.AlwaysOnTop = true
+					box.ZIndex = 5
+					box.Transparency = 0.3
+					box.Parent = workspace
+					espBoxes[plr] = box
+				end
+
+				if plr.Team then
+					espBoxes[plr].Color3 = plr.TeamColor.Color
+				else
+					espBoxes[plr].Color3 = Color3.fromRGB(255,255,255)
+				end
+
+			else
+				if espBoxes[plr] then
+					espBoxes[plr]:Destroy()
+					espBoxes[plr] = nil
+				end
+			end
+		end
+	end
+end)
